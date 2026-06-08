@@ -18,3 +18,6 @@ __pycache__/
 *.log
 *.pickle
 *.egg-info/
+
+# Ignore .zip file
+*.zip
