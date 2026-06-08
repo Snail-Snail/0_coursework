@@ -1,0 +1,20 @@
+# Ignore OS-specific system files
+.DS_Store
+Thumbs.db
+
+# Ignore virtual environments (if using Python)
+venv/ (or the exact name you gave e.g. my_venv/)
+.venv/
+env/
+cw_venv/
+
+# Ignore compiled code / IDE folders
+__pycache__/
+*.pyc
+.vscode/
+.idea/
+
+# Ignore log files and local history
+*.log
+*.pickle
+*.egg-info/
