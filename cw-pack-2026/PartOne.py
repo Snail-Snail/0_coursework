@@ -124,7 +124,37 @@ def get_subjects(doc):
 
 
 # function for question e (ii)
+def get_pmi_verbs(doc, subject="he"):
+    """return verbs most associated with the given subject, ordered by PMI"""
+    he_verb_counts = Counter()
+    all_subject_verb_counts = Counter()
+    he_as_subject = 0 
+    total_subject_tokens = 0
 
+    for token in doc:
+        if token.dep_ == "nsubj":
+            verb = token.head.lemma_.lower()
+            subj = token.text.lower()
+            
+            total_subject_tokens += 1
+            all_subject_verb_counts[verb] += 1  # count for ALL subjects
+            
+            if subj == subject:
+                he_as_subject += 1
+                he_verb_counts[verb] += 1  # count only for "he"
+
+    # calculate PMI for each verb that occurs with "he"
+    pmi_scores = {}
+    for verb, count in he_verb_counts.items():
+        p_he_verb = count / total_subject_tokens
+        p_he = he_as_subject / total_subject_tokens
+        p_verb = all_subject_verb_counts[verb] / total_subject_tokens
+        
+        pmi = math.log(p_he_verb / (p_he * p_verb))
+        pmi_scores[verb] = round(pmi, 4)
+
+    sorted_pmi = sorted(pmi_scores.items(), key=lambda x: x[1], reverse=True)
+    return sorted_pmi
 
 
 if __name__ == "__main__":
@@ -152,3 +182,11 @@ if __name__ == "__main__":
         doc = row["Doc"]
         subjects = get_subjects(doc)
         print(f"Title: {title}, 10 most common syntactic subjects: {subjects}")
+    
+    # for quesiton e, ii: title of each novel and a list of verbs most likely to occur with the subject he
+    # write the loop
+    for idx, row in df.iterrows():
+        title = row["title"]
+        doc = row["Doc"]
+        pmi_verbs = get_pmi_verbs(doc, subject="he")
+        print(f"Title: {title}, Verbs most associated with 'he' by PMI: {pmi_verbs[:10]}")
