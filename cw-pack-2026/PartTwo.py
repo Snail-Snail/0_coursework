@@ -63,3 +63,30 @@ svm_pred = svm.predict(X_test)
 print("macro F1-score:", f1_score(y_test, svm_pred, average="macro"))
 print("SVM (Linear) Classification Report:")
 print(classification_report(y_test, svm_pred))
+
+##############################################################################################
+# question 2c with n-grams
+vectorizer_ngram = TfidfVectorizer(
+    stop_words="english", max_features=3000, ngram_range= (1, 3)
+)
+X_ngram = vectorizer_ngram.fit_transform(df_cleaned["speech"])
+
+X_train_ng, X_test_ng, y_train_ng, y_test_ng = train_test_split(
+    X_ngram, df_cleaned["party"], test_size=0.2, random_state=26, stratify=df_cleaned["party"]
+)
+
+# train a Random Forest classifier
+rf_ng = RandomForestClassifier(random_state=26, n_estimators=300)
+rf_ng.fit(X_train_ng, y_train_ng)
+rf_ng_pred = rf_ng.predict(X_test_ng)
+print("macro F1-score:", f1_score(y_test_ng, rf_ng_pred, average="macro"))
+print("Random Forest Classification Report:")
+print(classification_report(y_test_ng, rf_ng_pred))
+
+# train a SVM with linear kernel
+svm_ng = LinearSVC(random_state=26)
+svm_ng.fit(X_train_ng, y_train_ng)
+svm_ng_pred = svm_ng.predict(X_test_ng)
+print("macro F1-score:", f1_score(y_test_ng, svm_ng_pred, average="macro"))
+print("SVM (Linear) Classification Report:")
+print(classification_report(y_test_ng, svm_ng_pred))
