@@ -167,7 +167,7 @@ if __name__ == "__main__":
     print(df.head())
     # nltk.download("cmudict")
     
-    """parse(df)"""  # uncomment this later
+    """parse(df)"""  # uncomment this before submission
     print(df.head())
     # print(get_ttrs(df))
     # print(get_fks(df))
@@ -190,3 +190,10 @@ if __name__ == "__main__":
         doc = row["Doc"]
         pmi_verbs = get_pmi_verbs(doc, subject="he")
         print(f"Title: {title}, Verbs most associated with 'he' by PMI: {pmi_verbs[:10]}")
+    
+    # for question e, iii: title of each novel and a list of verbs most likely to occur with the subject she
+    for idx, row in df.iterrows():
+        title = row["title"]
+        doc = row["Doc"]
+        pmi_verbs = get_pmi_verbs(doc, subject="she")
+        print(f"Title: {title}, Verbs most associated with 'she' by PMI: {pmi_verbs[:10]}")
