@@ -12,6 +12,7 @@ import nltk
 # nltk.download('punkt_tab')
 # nltk.download("cmudict")
 from nltk.corpus import cmudict
+import pickle
 
 
 nlp = spacy.load("en_core_web_sm")
@@ -76,10 +77,14 @@ def read_novels(path=Path.cwd()/ "cw-pack-2026" / "texts" / "novels"):
     return novels_df
 
 
-def parse(df, store_path=Path.cwd() / "pickles", out_name="parsed.pickle"):
+def parse(df, store_path=Path.cwd() /"cw-pack-2026" / "pickles", out_name="parsed.pickle"):
     """Parses the text of a DataFrame using spaCy, stores the parsed docs as a column and writes 
     the resulting  DataFrame to a pickle file"""
-    pass
+    store_path.mkdir(parents=True, exist_ok=True)  # creates the folder if it doesn't exist
+    df["Doc"] = df["text"].apply(nlp)
+    with open (store_path / out_name, "wb") as f:
+        pickle.dump(df, f)
+    return df
 
 def clean_text(text):
     """Cleans a text by removing punctuation and converting to lowercase."""
@@ -130,14 +135,18 @@ if __name__ == "__main__":
     """
     uncomment the following lines to run the functions once you have completed them
     """
-    # path = Path.cwd() / "texts" / "novels"
-    # print(path)
-    # df = read_novels(path) # this line will fail until you have completed the read_novels function above.
-    # print(df.head())
+    path = Path.cwd() /"cw-pack-2026" / "texts" / "novels"
+    print(path)
+    df = read_novels(path) # this line will fail until you have completed the read_novels function above.
+    print(df.head())
     # nltk.download("cmudict")
-    # parse(df)
-    # print(df.head())
+    parse(df)
+    print(df.head())
     # print(get_ttrs(df))
     # print(get_fks(df))
+    
+    # load Load the dataframe from the pickle file and use it for the remainder of this coursework part. 
+    with open (Path.cwd() / "cw-pack-2026" / "pickles" / "parsed.pickle", "rb") as f:
+        df = pickle.load(f)
     # df = pd.read_pickle(Path.cwd() / "pickles" /"name.pickle")
     # call functions for part (e) here.
