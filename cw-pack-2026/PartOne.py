@@ -6,6 +6,10 @@ import nltk
 import spacy
 import pandas as pd
 from pathlib import Path
+import re   
+import string ## to do fancy things with punctuation
+import nltk
+# nltk.download('punkt_tab')
 
 
 nlp = spacy.load("en_core_web_sm")
@@ -61,10 +65,28 @@ def parse(df, store_path=Path.cwd() / "pickles", out_name="parsed.pickle"):
     the resulting  DataFrame to a pickle file"""
     pass
 
+def clean_text(text):
+    """Cleans a text by removing punctuation and converting to lowercase."""
+    tokens = nltk.word_tokenize(text) # use nltk to tokenize the text into words
+    tokens = [t.lower() for t in tokens]
+    re_punc = re.compile("[%s]" % re.escape(string.punctuation))
+    tokens = [re_punc.sub("", t) for t in tokens]
+    tokens = [t for t in tokens if t.strip() != ""]
+    return tokens
 
-def nltk_ttr(text):
+def nltk_ttr():
     """Calculates the type-token ratio of a text. Text is tokenized using nltk.word_tokenize."""
-    pass
+    # df = read_novels()
+    path = Path.cwd()/ "cw-pack-2026" / "texts" / "novels"
+    d_title2ttr = dict()
+    for f in path.glob("*.txt"):
+        title, author, year = f.stem.split("-")
+        text = f.read_text()
+        tokens = clean_text(text)
+        ttr = len(set(tokens)) / len(tokens)
+        d_title2ttr[title] = ttr
+
+    return d_title2ttr  
 
 
 def get_ttrs(df):
