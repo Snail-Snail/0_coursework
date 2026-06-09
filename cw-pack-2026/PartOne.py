@@ -10,6 +10,8 @@ import re
 import string ## to do fancy things with punctuation
 import nltk
 # nltk.download('punkt_tab')
+# nltk.download("cmudict")
+from nltk.corpus import cmudict
 
 
 nlp = spacy.load("en_core_web_sm")
@@ -17,32 +19,46 @@ nlp.max_length = 2000000
 
 
 
-def fk_level(text, d):
-    """Returns the Flesch-Kincaid Grade Level of a text (higher grade is more difficult).
-    Requires a dictionary of syllables per word.
+# count the number of syllables in one word
+cmu = cmudict.dict()
+def count_syllables(word):
+    """Counts the number of syllables in a word using the cmudict."""
+    phones = cmu.get(word.lower())
+    if phones:
+        return sum(1 for ph in phones[0] if ph[-1].isdigit())
+    return None
 
-    Args:
-        text (str): The text to analyze.
-        d (dict): A dictionary of syllables per word.
+# count syllables in a text
+def count_syllables_in_text(text):
+    """Counts the total number of syllables in a text."""
+    tokens = clean_text(text)
+    sum_syllables = 0
+    for t in tokens:
+        syllables = count_syllables(t)
+        if syllables is not None:
+            sum_syllables += syllables
+    return sum_syllables
 
-    Returns:
-        float: The Flesch-Kincaid Grade Level of the text. (higher grade is more difficult)
-    """
-    pass
+# count sentences in a text 
+def count_sentences(text):
+    """Counts the number of sentences in a text using nltk.sent_tokenize."""
+    sentences = nltk.sent_tokenize(text)
+    return len(sentences)
 
-
-def count_syl(word, d):
-    """Counts the number of syllables in a word given a dictionary of syllables per word.
-    if the word is not in the dictionary, syllables are estimated by counting vowel clusters
-
-    Args:
-        word (str): The word to count syllables for.
-        d (dict): A dictionary of syllables per word.
-
-    Returns:
-        int: The number of syllables in the word.
-    """
-    pass
+# calculate fk level for each novel and return a dictionary mapping title to fk level
+def fk_level():
+    """returns a diction mapping title to Flesch–Kincaid Grade Level."""
+    path = Path.cwd()/ "cw-pack-2026" / "texts" / "novels"
+    d_title2fk = dict()
+    for f in path.glob("*.txt"):
+        title, author, year = f.stem.split("-")
+        text = f.read_text()
+        tokens = clean_text(text)
+        n_sentences = count_sentences(text)
+        n_syllables = count_syllables_in_text(text)
+        fk_grade = 0.39 * (len(tokens) / n_sentences) + 11.8 * (n_syllables / len(tokens)) - 15.59  
+        d_title2fk[title] = fk_grade
+    return d_title2fk
 
 
 def read_novels(path=Path.cwd()/ "cw-pack-2026" / "texts" / "novels"):
