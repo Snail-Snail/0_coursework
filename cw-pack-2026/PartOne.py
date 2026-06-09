@@ -13,7 +13,8 @@ import nltk
 # nltk.download("cmudict")
 from nltk.corpus import cmudict
 import pickle
-
+from collections import Counter
+import math
 
 nlp = spacy.load("en_core_web_sm")
 nlp.max_length = 2000000
@@ -110,24 +111,19 @@ def nltk_ttr():
     return d_title2ttr  
 
 
-def get_ttrs(df):
-    """helper function to add ttr to a dataframe"""
-    results = {}
-    for i, row in df.iterrows():
-        results[row["title"]] = nltk_ttr(row["text"])
-    return results
-
-
-def get_fks(df):
-    """helper function to add fk scores to a dataframe"""
-    results = {}
-    cmudict = nltk.corpus.cmudict.dict()
-    for i, row in df.iterrows():
-        results[row["title"]] = round(fk_level(row["text"], cmudict), 4)
-    return results
-
-
 #.. add functions for part (e) here
+def get_subjects(doc):
+    """Returns a list of the 10 most common syntactic subjects in a spaCy Doc."""
+    subjects = []
+    for token in doc:
+        if token.dep_ in ("nsubj", "nsubjpass"):
+            subjects.append(token.text.lower())
+    
+    counter = Counter(subjects)
+    return counter.most_common(10)
+
+
+# function for question e (ii)
 
 
 
@@ -140,7 +136,8 @@ if __name__ == "__main__":
     df = read_novels(path) # this line will fail until you have completed the read_novels function above.
     print(df.head())
     # nltk.download("cmudict")
-    parse(df)
+    
+    """parse(df)"""  # uncomment this later
     print(df.head())
     # print(get_ttrs(df))
     # print(get_fks(df))
@@ -148,5 +145,10 @@ if __name__ == "__main__":
     # load Load the dataframe from the pickle file and use it for the remainder of this coursework part. 
     with open (Path.cwd() / "cw-pack-2026" / "pickles" / "parsed.pickle", "rb") as f:
         df = pickle.load(f)
-    # df = pd.read_pickle(Path.cwd() / "pickles" /"name.pickle")
     # call functions for part (e) here.
+    # for question e, i: title of each novel and the 10 most common syntactic subjects.
+    for idx, row in df.iterrows():
+        title = row["title"]
+        doc = row["Doc"]
+        subjects = get_subjects(doc)
+        print(f"Title: {title}, 10 most common syntactic subjects: {subjects}")
