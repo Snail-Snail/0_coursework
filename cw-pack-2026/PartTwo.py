@@ -1,4 +1,9 @@
 import pandas as pd
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.model_selection import train_test_split
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.svm import LinearSVC
+from sklearn.metrics import classification_report, f1_score
 
 #  question a
 df = pd.read_csv("/Users/sisigao/Desktop/Birkbeck_master/Natural_language_processing/0_coursework/cw-pack-2026/texts/hansard10000.csv")
@@ -30,3 +35,31 @@ df_cleaned = df_cleaned[df_cleaned["speech_class"] == "Speech"]
 df_cleaned = df_cleaned[df_cleaned["speech"].str.len() >= 1000]
 # print(len(df_cleaned))
 print(f"Shape of cleaned DataFrame: {df_cleaned.shape}")
+
+##############################################################################################
+# question 2b
+# vectorise using TfidfVectorizer
+vectorizer = TfidfVectorizer(stop_words="english", max_features=3000)
+X = vectorizer.fit_transform(df_cleaned["speech"])
+y = df_cleaned["party"]
+
+# train test split with stratifed sampling
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.2, random_state=26, stratify=y
+)
+
+# train a Random Forest classifier
+rf = RandomForestClassifier(random_state=26, n_estimators=300)
+rf.fit(X_train, y_train)
+rf_pred = rf.predict(X_test)
+print("macro F1-score:", f1_score(y_test, rf_pred, average="macro"))
+print("Random Forest Classification Report:")
+print(classification_report(y_test, rf_pred))
+
+# train a SVM with linear kernel
+svm = LinearSVC(random_state=26)
+svm.fit(X_train, y_train)
+svm_pred = svm.predict(X_test)
+print("macro F1-score:", f1_score(y_test, svm_pred, average="macro"))
+print("SVM (Linear) Classification Report:")
+print(classification_report(y_test, svm_pred))
