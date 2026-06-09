@@ -16,6 +16,7 @@ __pycache__/
 
 # Ignore log files and local history
 *.log
+*.pkl
 *.pickle
 *.egg-info/
 
