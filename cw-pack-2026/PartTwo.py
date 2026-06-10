@@ -182,3 +182,32 @@ print(f"macro F1-score: {best_score:.4f}")
 print("Classification Report:")
 print(classification_report(y_test_c, best_pred))
 
+##############################################################################################
+# question 2e
+"""The preprocessing pipeline cleans and filters the text through four main stages:
+
+1. Cleaning: Lowercasing the text and stripping out all non-alphabetic characters.
+2. Tokenization: Splitting the cleaned text using NLTK's word_tokenize.
+3. POS Tagging: Assigning parts of speech to each token.
+4. Lemmatization: Reducing words to their base forms using WordNet tags.
+
+During this process, the tokens are filtered to keep only open-class words (nouns, verbs, adjectives, and adverbs). 
+Closed-class words—like pronouns and prepositions—are excluded since they don't offer any real predictive value. 
+Lemmatization helps maximize our 3,000-feature budget by grouping inflected variations (e.g., merging "voting" and "voted" into "vote"). 
+Finally, setting sublinear_tf=True keeps exceptionally long speeches from skewing the feature weights, 
+while min_df=2 weeds out ultra-rare words that wouldn't help the model generalize.
+
+Performance & Model Evaluation
+The custom tokenizer delivered the strongest results in the entire assignment. 
+The SVM model hit a macro F1 score of 0.529, a moderate step up from the 0.5257 achieved in parts (b) and (c).
+
+The performance on the Liberal Democrat and SNP classes was still quite poor. 
+This isn't a flaw in the tokenizer itself, but rather a direct result of severe class imbalance; 
+the test set only contained 15 Liberal Democrat samples and 33 SNP samples. 
+Across the board, SVM routinely beat out the Random Forest model. 
+
+Key Trade-offs
+The primary drawback here is computational speed. 
+Running POS tagging for every token is significantly slower than standard stemming. 
+However, given the manageable size of this dataset, 
+the extra processing time is a reasonable trade-off for better classification quality."""
