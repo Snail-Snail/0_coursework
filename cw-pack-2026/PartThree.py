@@ -1,4 +1,5 @@
 # question 3a
+# model was suggested by ChatGPT
 """I used google/flan-t5-base accessed locally via the HuggingFace transformers library. 
 This model was chosen because it is lightweight (~300MB), runs on CPU without requiring a GPU, 
 and was designed to follow natural language instructions, 
@@ -42,6 +43,7 @@ model_id = "google/flan-t5-base"
 tokenizer = AutoTokenizer.from_pretrained(model_id)
 model = AutoModelForSeq2SeqLM.from_pretrained(model_id)
 
+# function format was learned from Claude
 def zero_shot_classify(speech_text):
     prompt = f"""this is a political speech classifier. 
     Classify the following UK parliamentary speech into exactly one of these parties:
@@ -85,7 +87,7 @@ def get_few_shot_example(speech_train, y_train, n_per_class = 1):
     """select 1 example per class from training data"""
     examples = []
     for label in ["Conservative", "Labour", "Scottish National Party"]:
-        # get indices for this class
+        # get indices for this class. suggested by Gemini.
         indices = np.where(y_train == label)[0]
         # pick the first one
         idx = indices[0]
@@ -94,6 +96,7 @@ def get_few_shot_example(speech_train, y_train, n_per_class = 1):
 
 few_shot_examples = get_few_shot_example(speech_train, y_train, n_per_class=1)
 
+# function learned from Claude
 def build_few_shot_prompt(speech_text, examples):
     # build the example section
     examples_text = ""
@@ -113,6 +116,7 @@ def build_few_shot_prompt(speech_text, examples):
 
     return prompt
 
+# function suggested by Claude
 def few_shot_classify(speech_text):
     prompt = build_few_shot_prompt(speech_text, few_shot_examples)
     inputs = tokenizer(prompt, return_tensors="pt", truncation= True, max_length=512)
@@ -126,3 +130,20 @@ print("Few-shot macro F1-score:", f1_score(y_test, y_pred_few, average="macro"))
 print("Few-shot Classification Report:")
 print(classification_report(y_test, y_pred_few))
 
+##############################################################################################
+# question 3d
+# the reason why that small models perform worse on few-shot was suggested by Claude.
+"""Zero-shot vs Few-shot Comparison
+
+The zero-shot approach produced a F1 score of 0.39, slightly higher than the few-shot score of 0.34. 
+Although few-shot prompting is often expected to improve performance by providing labelled examples, this was not the case in this experiment.
+
+One likely reason is the limitation of the model used, flan-t5-base, which has around 250 million parameters and a maximum input length of 512 tokens. 
+
+This highlights a common issue with smaller language models: 
+adding examples can reduce the amount of context available for the actual task. 
+Larger models with longer context windows are generally better able to benefit from few-shot prompting without losing important input information.
+
+Despite the difference between the two approaches, both achieved relatively low scores compared with the traditional machine learning models evaluated in Part Two. 
+This suggests that the model struggled to identify subtle linguistic differences between political parties.
+"""
