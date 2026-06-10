@@ -79,7 +79,7 @@ print(classification_report(y_test, svm_pred))
 
 ##############################################################################################
 # question 2c with n-grams
-# question 2c with n-grams
+
 vectorizer_ngram = TfidfVectorizer(
     stop_words="english", max_features=3000, ngram_range= (1, 3)
 )
@@ -113,7 +113,7 @@ print(classification_report(y_test, svm_ng_pred))
 # POS filtering to keep only nouns, verbs, adj. most likely 
 # keep bigram for party-specific phrases (normally two words)
 
-# this strategy was suggested by Copilot
+# this strategy was suggested by Copilot. Code was learned from Copilot.
 
 lemmatizer = WordNetLemmatizer()
 stop_words = set(stopwords.words("english"))
@@ -195,6 +195,7 @@ print(classification_report(y_test, best_pred))
 
 ##############################################################################################
 # question 2e
+# Tokenisation strategy was suggested by Copilot
 """The preprocessing pipeline cleans and filters the text through four main stages:
 
 1. Cleaning: Lowercasing the text and stripping out all non-alphabetic characters.
@@ -208,12 +209,12 @@ Lemmatization helps maximize our 3,000-feature budget by grouping inflected vari
 Finally, setting sublinear_tf=True keeps exceptionally long speeches from skewing the feature weights, 
 while min_df=2 weeds out ultra-rare words that wouldn't help the model generalize.
 
-Performance & Model Evaluation
+Performance and Model Evaluation
 The custom tokenizer delivered the strongest results in the entire assignment. 
-The SVM model hit a macro F1 score of 0.5368, a moderate step up from the 0.5339 achieved in parts (b) and (c).
+The SVM model hit a macro F1 score of 0.5368, a moderate step up from the 0.5339 achieved in part (c).
 
 The performance on the Liberal Democrat and SNP classes was still quite poor. 
-This isn't a flaw in the tokenizer itself, but rather a direct result of severe class imbalance; 
+This is a severe class imbalance.
 the test set only contained 15 Liberal Democrat samples and 33 SNP samples. 
 Across the board, SVM routinely beat out the Random Forest model. 
 
@@ -221,4 +222,4 @@ Key Trade-offs
 The primary drawback here is computational speed. 
 Running POS tagging for every token is significantly slower than standard stemming. 
 However, given the manageable size of this dataset, 
-the extra processing time is a reasonable trade-off for better classification quality."""
+the extra processing time is a reasonable trade-off for the slightly better classification quality."""

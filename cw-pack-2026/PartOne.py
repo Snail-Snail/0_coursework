@@ -22,6 +22,7 @@ nlp.max_length = 2000000
 
 
 # count the number of syllables in one word
+# This function was adviced by Claude
 cmu = cmudict.dict()
 def count_syllables(word):
     """Counts the number of syllables in a word using the cmudict."""
@@ -30,6 +31,7 @@ def count_syllables(word):
         return sum(1 for ph in phones[0] if ph[-1].isdigit())
     return None
 
+# This function was adviced by Claude
 # count syllables in a text
 def count_syllables_in_text(text):
     """Counts the total number of syllables in a text."""
@@ -41,6 +43,7 @@ def count_syllables_in_text(text):
             sum_syllables += syllables
     return sum_syllables
 
+# This function was adviced by Claude
 # count sentences in a text 
 def count_sentences(text):
     """Counts the number of sentences in a text using nltk.sent_tokenize."""
@@ -91,11 +94,13 @@ def clean_text(text):
     """Cleans a text by removing punctuation and converting to lowercase."""
     tokens = nltk.word_tokenize(text) # use nltk to tokenize the text into words
     tokens = [t.lower() for t in tokens]
+    # the way to remove punctation was suggested by Claude
     re_punc = re.compile("[%s]" % re.escape(string.punctuation))
     tokens = [re_punc.sub("", t) for t in tokens]
     tokens = [t for t in tokens if t.strip() != ""]
     return tokens
 
+# this function was learned from one of the example code provided on Moodle in NLP module
 def nltk_ttr():
     """Calculates the type-token ratio of a text. Text is tokenized using nltk.word_tokenize."""
     # df = read_novels()
@@ -112,6 +117,8 @@ def nltk_ttr():
 
 
 #.. add functions for part (e) here
+
+# the way to find subsjects was suggested by Claude
 def get_subjects(doc):
     """Returns a list of the 10 most common syntactic subjects in a spaCy Doc."""
     subjects = []
@@ -144,6 +151,7 @@ def get_pmi_verbs(doc, subject="he"):
                 he_verb_counts[verb] += 1  # count only for "he"
 
     # calculate PMI for each verb that occurs with "he"
+    # this was suggested by Claude
     pmi_scores = {}
     for verb, count in he_verb_counts.items():
         p_he_verb = count / total_subject_tokens
@@ -167,7 +175,7 @@ if __name__ == "__main__":
     print(df.head())
     # nltk.download("cmudict")
     
-    """parse(df)"""  # uncomment this before submission
+    parse(df)  # uncomment this before submission
     print(df.head())
     # print(get_ttrs(df))
     # print(get_fks(df))
