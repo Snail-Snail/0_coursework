@@ -44,15 +44,20 @@ print(f"Shape of cleaned DataFrame: {df_cleaned.shape}")
 
 ##############################################################################################
 # question 2b
+# question 2b
 # vectorise using TfidfVectorizer
 vectorizer = TfidfVectorizer(stop_words="english", max_features=3000)
-X = vectorizer.fit_transform(df_cleaned["speech"])
-y = df_cleaned["party"]
 
-# train test split with stratifed sampling
-X_train, X_test, y_train, y_test = train_test_split(
-    X, y, test_size=0.2, random_state=26, stratify=y
+# can't vectorise the whole dataset. it will cause data leakage.
+speeches = df_cleaned["speech"].values
+y = df_cleaned["party"].values
+
+speech_train, speech_test, y_train, y_test = train_test_split(
+    speeches, y, test_size=0.2, random_state=26, stratify=y
 )
+
+X_train = vectorizer.fit_transform(speech_train)
+X_test = vectorizer.transform(speech_test)
 
 # train a Random Forest classifier
 rf = RandomForestClassifier(random_state=26, n_estimators=300)
@@ -70,38 +75,45 @@ print("macro F1-score:", f1_score(y_test, svm_pred, average="macro"))
 print("SVM (Linear) Classification Report:")
 print(classification_report(y_test, svm_pred))
 
+
+
 ##############################################################################################
+# question 2c with n-grams
 # question 2c with n-grams
 vectorizer_ngram = TfidfVectorizer(
     stop_words="english", max_features=3000, ngram_range= (1, 3)
 )
-X_ngram = vectorizer_ngram.fit_transform(df_cleaned["speech"])
 
-X_train_ng, X_test_ng, y_train_ng, y_test_ng = train_test_split(
-    X_ngram, df_cleaned["party"], test_size=0.2, random_state=26, stratify=df_cleaned["party"]
-)
+# modify code here to avoid data leakage
+X_train_ng = vectorizer_ngram.fit_transform(speech_train)
+X_test_ng = vectorizer_ngram.transform(speech_test)
+
 
 # train a Random Forest classifier
 rf_ng = RandomForestClassifier(random_state=26, n_estimators=300)
-rf_ng.fit(X_train_ng, y_train_ng)
+rf_ng.fit(X_train_ng, y_train)
 rf_ng_pred = rf_ng.predict(X_test_ng)
-print("macro F1-score:", f1_score(y_test_ng, rf_ng_pred, average="macro"))
+print("macro F1-score:", f1_score(y_test, rf_ng_pred, average="macro"))
 print("Random Forest Classification Report:")
-print(classification_report(y_test_ng, rf_ng_pred))
+print(classification_report(y_test, rf_ng_pred))
 
 # train a SVM with linear kernel
 svm_ng = LinearSVC(random_state=26)
-svm_ng.fit(X_train_ng, y_train_ng)
+svm_ng.fit(X_train_ng, y_train)
 svm_ng_pred = svm_ng.predict(X_test_ng)
-print("macro F1-score:", f1_score(y_test_ng, svm_ng_pred, average="macro"))
+print("macro F1-score:", f1_score(y_test, svm_ng_pred, average="macro"))
 print("SVM (Linear) Classification Report:")
-print(classification_report(y_test_ng, svm_ng_pred))
+print(classification_report(y_test, svm_ng_pred))
+
+
 
 ##############################################################################################
 # question 2d
 # lemmatise to reduce vocabulary noise
 # POS filtering to keep only nouns, verbs, adj. most likely 
 # keep bigram for party-specific phrases (normally two words)
+
+# this strategy was suggested by Copilot
 
 lemmatizer = WordNetLemmatizer()
 stop_words = set(stopwords.words("english"))
@@ -153,11 +165,8 @@ vectorizer_custom = TfidfVectorizer(
     sublinear_tf=True,    
 )
 
-X_custom = vectorizer_custom.fit_transform(df_cleaned["speech"])
-
-X_train_c, X_test_c, y_train_c, y_test_c = train_test_split(
-    X_custom, df_cleaned["party"], test_size=0.2, random_state=26, stratify=df_cleaned["party"]
-)
+X_train_c = vectorizer_custom.fit_transform(speech_train)
+X_test_c = vectorizer_custom.transform(speech_test)
 
 # evaluate classifiers, report the best
 classifiers = {
@@ -168,9 +177,9 @@ classifiers = {
 best_name, best_score, best_pred = None, 0, None
 
 for name, clf in classifiers.items():
-    clf.fit(X_train_c, y_train_c)
+    clf.fit(X_train_c, y_train)
     pred = clf.predict(X_test_c)
-    score = f1_score(y_test_c, pred, average="macro")
+    score = f1_score(y_test, pred, average="macro")
     print(f"{name} — macro F1: {score:.4f}")
     if score > best_score:
         best_score = score
@@ -180,7 +189,9 @@ for name, clf in classifiers.items():
 print(f"\nBest classifier: {best_name}")
 print(f"macro F1-score: {best_score:.4f}")
 print("Classification Report:")
-print(classification_report(y_test_c, best_pred))
+print(classification_report(y_test, best_pred))
+
+
 
 ##############################################################################################
 # question 2e
@@ -199,7 +210,7 @@ while min_df=2 weeds out ultra-rare words that wouldn't help the model generaliz
 
 Performance & Model Evaluation
 The custom tokenizer delivered the strongest results in the entire assignment. 
-The SVM model hit a macro F1 score of 0.529, a moderate step up from the 0.5257 achieved in parts (b) and (c).
+The SVM model hit a macro F1 score of 0.5368, a moderate step up from the 0.5339 achieved in parts (b) and (c).
 
 The performance on the Liberal Democrat and SNP classes was still quite poor. 
 This isn't a flaw in the tokenizer itself, but rather a direct result of severe class imbalance; 
