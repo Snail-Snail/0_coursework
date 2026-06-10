@@ -5,6 +5,12 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.svm import LinearSVC
 from sklearn.metrics import classification_report, f1_score
 
+import re
+import nltk
+from nltk.stem import WordNetLemmatizer
+from nltk.corpus import stopwords, wordnet
+from nltk import pos_tag, word_tokenize
+
 #  question a
 df = pd.read_csv("/Users/sisigao/Desktop/Birkbeck_master/Natural_language_processing/0_coursework/cw-pack-2026/texts/hansard10000.csv")
 # display(df.head(2))
@@ -90,3 +96,89 @@ svm_ng_pred = svm_ng.predict(X_test_ng)
 print("macro F1-score:", f1_score(y_test_ng, svm_ng_pred, average="macro"))
 print("SVM (Linear) Classification Report:")
 print(classification_report(y_test_ng, svm_ng_pred))
+
+##############################################################################################
+# question 2d
+# lemmatise to reduce vocabulary noise
+# POS filtering to keep only nouns, verbs, adj. most likely 
+# keep bigram for party-specific phrases (normally two words)
+
+lemmatizer = WordNetLemmatizer()
+stop_words = set(stopwords.words("english"))
+
+def get_wordnet_pos(treebank_tag):
+    """Convert Penn Treebank POS tags to WordNet POS tags for lemmatizer."""
+    if treebank_tag.startswith("J"):
+        return wordnet.ADJ
+    elif treebank_tag.startswith("V"):
+        return wordnet.VERB
+    elif treebank_tag.startswith("N"):
+        return wordnet.NOUN
+    elif treebank_tag.startswith("R"):
+        return wordnet.ADV
+    else:
+        return wordnet.NOUN  # default
+
+def custom_tokenizer(text):
+    # 1. lowercase and remove non-alpha characters
+    text = text.lower()
+    text = re.sub(r"[^a-z\s]", "", text)
+
+    # 2. tokenize
+    tokens = word_tokenize(text)
+
+    # 3. POS tag
+    tagged = pos_tag(tokens)
+
+    # 4. keep only nouns, verbs, adjectives, adverbs; lemmatize; remove stopwords
+    lemmatized = [
+        lemmatizer.lemmatize(word, get_wordnet_pos(tag))
+        for word, tag in tagged
+        if word not in stop_words
+        and len(word) > 2
+        and tag.startswith(("N", "V", "J", "R"))  # nouns, verbs, adj, adv
+    ]
+
+    return lemmatized
+
+# vectorise with custom tokenizer + bigrams, max 3000 features
+vectorizer_custom = TfidfVectorizer(
+    tokenizer=custom_tokenizer,
+    max_features=3000,
+    # unigrams + bigrams (trigrams add noise with lemmatized tokens)
+    ngram_range=(1, 2),   
+    # ignore very rare terms (reduces noise)
+    min_df=2,             
+    # log-scale TF dampens very frequent terms
+    sublinear_tf=True,    
+)
+
+X_custom = vectorizer_custom.fit_transform(df_cleaned["speech"])
+
+X_train_c, X_test_c, y_train_c, y_test_c = train_test_split(
+    X_custom, df_cleaned["party"], test_size=0.2, random_state=26, stratify=df_cleaned["party"]
+)
+
+# evaluate classifiers, report the best
+classifiers = {
+    "Random Forest": RandomForestClassifier(n_estimators=300, random_state=26),
+    "SVM (Linear)":  LinearSVC(random_state=26),
+}
+
+best_name, best_score, best_pred = None, 0, None
+
+for name, clf in classifiers.items():
+    clf.fit(X_train_c, y_train_c)
+    pred = clf.predict(X_test_c)
+    score = f1_score(y_test_c, pred, average="macro")
+    print(f"{name} — macro F1: {score:.4f}")
+    if score > best_score:
+        best_score = score
+        best_name  = name
+        best_pred  = pred
+
+print(f"\nBest classifier: {best_name}")
+print(f"macro F1-score: {best_score:.4f}")
+print("Classification Report:")
+print(classification_report(y_test_c, best_pred))
+
