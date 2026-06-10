@@ -74,3 +74,55 @@ y_pred = [zero_shot_classify(speech) for speech in speech_test]  # raw text, not
 print("macro F1-score:", f1_score(y_test, y_pred, average="macro"))
 print("Zero shot Classification Report:")
 print(classification_report(y_test, y_pred))
+
+
+##############################################################################################
+# question 3c few shot classifier
+import numpy as np
+
+# function to pick examples from df
+def get_few_shot_example(speech_train, y_train, n_per_class = 1):
+    """select 1 example per class from training data"""
+    examples = []
+    for label in ["Conservative", "Labour", "Scottish National Party"]:
+        # get indices for this class
+        indices = np.where(y_train == label)[0]
+        # pick the first one
+        idx = indices[0]
+        examples.append((speech_train[idx][:300], label))
+    return examples
+
+few_shot_examples = get_few_shot_example(speech_train, y_train, n_per_class=1)
+
+def build_few_shot_prompt(speech_text, examples):
+    # build the example section
+    examples_text = ""
+    for speech, label in examples:
+        examples_text += f"Speech: {speech}\nParty: {label}\n\n"
+    
+    prompt = f"""Classify the following UK parliamentary speech into exactly one of these parties: 
+    Conservative, Labour, Scottish National Party.
+    Output only the party name, nothing else.
+
+    Here are some examples:
+    {examples_text}
+    
+    Now classify this speech:
+    Speech: {speech_text[:500]}
+    Party:"""
+
+    return prompt
+
+def few_shot_classify(speech_text):
+    prompt = build_few_shot_prompt(speech_text, few_shot_examples)
+    inputs = tokenizer(prompt, return_tensors="pt", truncation= True, max_length=512)
+    outputs = model.generate(**inputs, max_new_tokens = 10)
+    return tokenizer.decode(outputs[0], skip_special_tokens=True).strip()
+
+# run on test set
+y_pred_few = [few_shot_classify(speech) for speech in speech_test]
+
+print("Few-shot macro F1-score:", f1_score(y_test, y_pred_few, average="macro"))
+print("Few-shot Classification Report:")
+print(classification_report(y_test, y_pred_few))
+
